@@ -1,0 +1,382 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.offcn.dao.StudentMapper">
+  <resultMap id="BaseResultMap" type="com.offcn.po.Student">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="sex" jdbcType="VARCHAR" property="sex" />
+    <result column="address" jdbcType="VARCHAR" property="address" />
+    <result column="tel" jdbcType="VARCHAR" property="tel" />
+    <result column="classid" jdbcType="INTEGER" property="classid" />
+    <result column="files" jdbcType="VARCHAR" property="files" />
+  </resultMap>
+  <select id="getStu" resultType="stuExt">
+    select s.*,c.name cname from student s left join classes c on s.classid=c.id limit #{start},#{size}
+  </select>
+  <select id="getCount" resultType="int">
+    select count(1) from student s left join classes c on s.classid=c.id
+  </select>
+  <resultMap type="StuLoginExt" id="rs2">
+     <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="sex" jdbcType="VARCHAR" property="sex" />
+    <result column="address" jdbcType="VARCHAR" property="address" />
+    <result column="tel" jdbcType="VARCHAR" property="tel" />
+    <result column="loginname" property="loginname"/>
+    <result column="password" property="password"/>
+    <association property="classes" javaType="Classes">
+      <id column="cid" property="id"/>
+    </association>
+  </resultMap>
+  <select id="getStuAndLogin" resultMap="rs2">
+    select s.*,c.id cid,s.loginname,s.password from student s left join classes c on s.classid=c.id left join login l on l.rid=s.id where s.id=#{id} 
+    <!--        因为有相同字段，所以要使用表名 -->
+             </select>
+  
+  
+  
+  <!-- 个人信息 模块-->
+  <resultMap id="stuAndClass" type="Student">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="sex" jdbcType="VARCHAR" property="sex" />
+    <result column="address" jdbcType="VARCHAR" property="address" />
+    <result column="tel" jdbcType="VARCHAR" property="tel" />
+    <result column="classid" jdbcType="INTEGER" property="classid" />
+    <result column="files" jdbcType="VARCHAR" property="files" />
+    
+    <association property="classes" javaType="Classes">
+    	<id column="claid" jdbcType="INTEGER" property="id" />
+    	<result column="claname" jdbcType="VARCHAR" property="name" />
+    	<result column="type" jdbcType="VARCHAR" property="type" />
+    </association>
+    
+    <association property="login" javaType="Login">
+    	<id column="rid" jdbcType="INTEGER" property="rid" />
+    	<result column="loginname" jdbcType="VARCHAR" property="loginname" />
+    	<result column="password" jdbcType="VARCHAR" property="password" />
+    </association>
+  </resultMap>
+  <resultMap type="Student" id="myinfo" extends="stuAndClass"></resultMap>
+  <select id="getMyInfo" resultMap="myinfo" parameterType="int">
+  	SELECT s.*,cs.name as claname,cs.type ,l.loginname,l.password from student s,classes cs,login l where s.classid=cs.id and s.id =l.rid and role=3 and s.id=#{id}
+  </select>
+  
+  <update id="updatePwd" parameterType="Login">
+  	update login set password=#{password} where rid=#{rid} and role=3 and loginname=#{loginname}
+  </update>
+  
+  
+  <select id="getMyCoursesCount" parameterType="int" resultType="int"> 
+  	SELECT count(1) from student s ,classes cs,teacher t,sc c,course cou where s.id=c.sid and c.cid=cou.id and c.tid=t.id and s.classid=cs.id and s.id=#{id} and cou.type='选修' 
+
+  </select>
+  
+  <resultMap type="Student" id="mycourse">
+  	<id column="id" jdbcType="INTEGER" property="id" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="sex" jdbcType="VARCHAR" property="sex" />
+    <result column="address" jdbcType="VARCHAR" property="address" />
+    <result column="tel" jdbcType="VARCHAR" property="tel" />
+    <result column="classid" jdbcType="INTEGER" property="classid" />
+    <result column="files" jdbcType="VARCHAR" property="files" />
+    <association property="classes" javaType="Classes">
+    	 <id column="id" jdbcType="INTEGER" property="id" />
+    	 <result column="claname" jdbcType="VARCHAR" property="name" />
+    	 <result column="type" jdbcType="VARCHAR" property="type" />
+    </association>
+    <collection property="sc" ofType="sc">
+    	<association property="course" javaType="course">
+    		<id column="id" jdbcType="INTEGER" property="id" />
+    		<result column="couname" jdbcType="VARCHAR" property="name" />
+    		<result column="coutype" jdbcType="VARCHAR" property="type" />
+    	</association>
+    	<association property="teacher" javaType="teacher">
+    		<id column="id" jdbcType="INTEGER" property="id" />
+    		<result column="teaname" jdbcType="VARCHAR" property="name" />
+    	</association>
+    </collection>
+  </resultMap>
+  <select id="getMyCourses" resultMap="mycourse">
+  	SELECT s.*,cs.name as claname,cs.type ,t.name as teaname,cou.name as couname,cou.type as coutype 
+  	from student s ,classes cs,teacher t,sc c,course cou 
+  	where s.id=c.sid 
+  	and c.cid=cou.id 
+  	and c.tid=t.id
+  	and s.classid=cs.id
+  	and s.id=#{id} 
+  	and cou.type=#{type} limit #{pageNum},#{size}
+  </select>
+  
+  
+  <resultMap type="CtcKey" id="selectCourse">
+  	     <id column="couid" jdbcType="INTEGER" property="couid" />
+   	 	 <id column="tid" jdbcType="INTEGER" property="tid" />
+    	 <id column="claid" jdbcType="INTEGER" property="claid" />
+    	 <association property="teacher" javaType="teacher">
+    	 	 <id column="teaid" jdbcType="INTEGER" property="id" />
+    		 <result column="teaname" jdbcType="VARCHAR" property="name" />
+    		 <result column="type" jdbcType="INTEGER" property="type" />
+    	 </association>
+    	 <association property="course" javaType="course">
+    	 	<id column="couid" jdbcType="INTEGER" property="id" />
+    		<result column="couname" jdbcType="VARCHAR" property="name" />
+    		<result column="coutype" jdbcType="VARCHAR" property="type" />
+    	 </association>
+    	 <association property="cla" javaType="Classes">
+    	 	 <id column="id2" jdbcType="INTEGER" property="id" />
+    		 <result column="name2" jdbcType="VARCHAR" property="name" />
+    		 <result column="type2" jdbcType="VARCHAR" property="type" />
+    	 </association>
+  </resultMap>
+  <!-- <select id="getStuById" resultType="student" parameterType="int">
+  	select s.* 
+  </select> -->
+  <select id="selectCourse" resultMap="selectCourse" parameterType="int">
+  	select t.id as teaid,t.name as teaname,c.id as couid,c.name as couname,c.type as coutype ,cs.name as claname from ctc ct,teacher t,course c ,classes cs where ct.tid=t.id and c.id=ct.couid and ct.claid=cs.id and cs.id=#{claid}
+  <!-- and c.type=0  -->
+  </select>
+  <insert id="addcourse" parameterType="list">
+  	insert into sc(sid,tid,cid) values
+  	<foreach collection="list" item="sc" separator=",">
+  		(#{sc.sid},#{sc.tid},#{sc.cid})
+  	</foreach>
+  </insert>
+  
+  
+  
+  
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    id, name, sex, address, tel, classid, files
+  </sql>
+  <select id="selectByExample" parameterType="com.offcn.po.StudentExample" resultMap="BaseResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="Base_Column_List" />
+    from student
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    <if test="orderByClause != null">
+      order by ${orderByClause}
+    </if>
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from student
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from student
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.offcn.po.StudentExample">
+    delete from student
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.offcn.po.Student">
+    <selectKey keyProperty="id" order="AFTER" resultType="int">
+      select last_insert_id()
+    </selectKey>
+    insert into student ( name, sex, 
+      address, tel, classid, 
+      files)
+    values ( #{name,jdbcType=VARCHAR}, #{sex,jdbcType=VARCHAR}, 
+      #{address,jdbcType=VARCHAR}, #{tel,jdbcType=VARCHAR}, #{classid,jdbcType=INTEGER}, 
+      #{files,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.offcn.po.Student">
+    insert into student
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="name != null">
+        name,
+      </if>
+      <if test="sex != null">
+        sex,
+      </if>
+      <if test="address != null">
+        address,
+      </if>
+      <if test="tel != null">
+        tel,
+      </if>
+      <if test="classid != null">
+        classid,
+      </if>
+      <if test="files != null">
+        files,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="sex != null">
+        #{sex,jdbcType=VARCHAR},
+      </if>
+      <if test="address != null">
+        #{address,jdbcType=VARCHAR},
+      </if>
+      <if test="tel != null">
+        #{tel,jdbcType=VARCHAR},
+      </if>
+      <if test="classid != null">
+        #{classid,jdbcType=INTEGER},
+      </if>
+      <if test="files != null">
+        #{files,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.offcn.po.StudentExample" resultType="java.lang.Long">
+    select count(*) from student
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+  <update id="updateByExampleSelective" parameterType="map">
+    update student
+    <set>
+      <if test="record.id != null">
+        id = #{record.id,jdbcType=INTEGER},
+      </if>
+      <if test="record.name != null">
+        name = #{record.name,jdbcType=VARCHAR},
+      </if>
+      <if test="record.sex != null">
+        sex = #{record.sex,jdbcType=VARCHAR},
+      </if>
+      <if test="record.address != null">
+        address = #{record.address,jdbcType=VARCHAR},
+      </if>
+      <if test="record.tel != null">
+        tel = #{record.tel,jdbcType=VARCHAR},
+      </if>
+      <if test="record.classid != null">
+        classid = #{record.classid,jdbcType=INTEGER},
+      </if>
+      <if test="record.files != null">
+        files = #{record.files,jdbcType=VARCHAR},
+      </if>
+    </set>
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByExample" parameterType="map">
+    update student
+    set id = #{record.id,jdbcType=INTEGER},
+      name = #{record.name,jdbcType=VARCHAR},
+      sex = #{record.sex,jdbcType=VARCHAR},
+      address = #{record.address,jdbcType=VARCHAR},
+      tel = #{record.tel,jdbcType=VARCHAR},
+      classid = #{record.classid,jdbcType=INTEGER},
+      files = #{record.files,jdbcType=VARCHAR}
+    <if test="_parameter != null">
+      <include refid="Update_By_Example_Where_Clause" />
+    </if>
+  </update>
+  <update id="updateByPrimaryKeySelective" parameterType="com.offcn.po.Student">
+    update student
+    <set>
+      <if test="name != null">
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="sex != null">
+        sex = #{sex,jdbcType=VARCHAR},
+      </if>
+      <if test="address != null">
+        address = #{address,jdbcType=VARCHAR},
+      </if>
+      <if test="tel != null">
+        tel = #{tel,jdbcType=VARCHAR},
+      </if>
+      <if test="classid != null">
+        classid = #{classid,jdbcType=INTEGER},
+      </if>
+      <if test="files != null">
+        files = #{files,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.offcn.po.Student">
+    update student
+    set name = #{name,jdbcType=VARCHAR},
+      sex = #{sex,jdbcType=VARCHAR},
+      address = #{address,jdbcType=VARCHAR},
+      tel = #{tel,jdbcType=VARCHAR},
+      classid = #{classid,jdbcType=INTEGER},
+      files = #{files,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

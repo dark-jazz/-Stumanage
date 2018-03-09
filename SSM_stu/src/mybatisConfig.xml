@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    
+    <settings>
+	  <setting name="lazyLoadingEnabled" value="true"/>
+	  <setting name="aggressiveLazyLoading" value="false"/>
+	  <setting name="cacheEnabled" value="true"/>
+	</settings>
+	
+	<typeAliases>
+	 <package name="com.offcn.po"/>
+	</typeAliases>
+	<!-- <environments default="development">
+		<environment id="development">
+			<transactionManager type="JDBC"/>
+			<dataSource type="POOLED">
+				<property name="driver" value="com.mysql.jdbc.Driver" />
+				<property name="url" value="jdbc:mysql://localhost:3306/mybatistest" />
+				<property name="username" value="root" />
+				<property name="password" value="root" />
+			</dataSource>
+		</environment>
+	</environments> -->
+	<!-- <mappers>
+		<mapper resource="com/offcn/dao/UserMapper.xml" />
+		<mapper class="com.offcn.po1.UserMapper"/>
+		<mapper resource="com/offcn/po/UserMapper.xml" />
+		<mapper resource="com/offcn3/dao/UserMapper.xml" />
+		<package name="com.offcn.dao"/>
+	</mappers> -->
+</configuration>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+    	 http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+     	 http://www.springframework.org/schema/context
+         http://www.springframework.org/schema/context/spring-context-4.3.xsd
+         http://www.springframework.org/schema/aop
+         http://www.springframework.org/schema/aop/spring-aop.xsd
+         http://www.springframework.org/schema/tx
+     	 http://www.springframework.org/schema/tx/spring-tx.xsd">
+	
+	<!-- 注解扫描器 -->
+	<context:component-scan base-package="com.offcn">
+	   <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+	</context:component-scan>
+	
+	<!-- 数据库连接池 -->
+ 	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource">
+   		<property name="driverClassName" value="com.mysql.jdbc.Driver"></property>
+   		<property name="url" value="jdbc:mysql://localhost:3306/test?useUnicode=true&amp;characterEncoding=utf8"></property>
+   		<property name="username" value="root"></property>
+   		<property name="password" value="123123"></property>
+   	</bean>
+   	
+   <!-- mybatis工厂 -->
+   	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+   	  <property name="dataSource" ref="dataSource"></property>
+   	  <!-- <property name="mapperLocations" value="classpath:com/offcn/mapper/*.xml"></property>   -->
+   	  <property name="configLocation" value="classpath:mybatisConfig.xml"></property>
+   	</bean>
+   	
+   	<!-- springmvc的地址扫描 -->
+   	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+   	   <property name="basePackage" value="com.offcn.dao"></property>
+   	   <property name="sqlSessionFactory" ref="sqlSessionFactory"></property>
+   	</bean>
+   	
+   	
+   	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+   		<property name="dataSource" ref="dataSource"></property>
+   	</bean>
+   	
+   <!-- 	事务处理 -->
+   <tx:advice id="txAdvice" transaction-manager="transactionManager">
+     <tx:attributes>
+      <tx:method name="find*" isolation="DEFAULT" propagation="REQUIRED" read-only="true"/>
+      <tx:method name="*" isolation="DEFAULT" propagation="REQUIRED" read-only="false"/>
+     </tx:attributes>
+   </tx:advice>
+<!--    面向切面编程 -->
+   <aop:config>
+     <aop:pointcut expression="execution(* com.offcn.service.*.*(..))" id="poit"/>
+     <aop:advisor advice-ref="txAdvice" pointcut-ref="poit"/>
+   </aop:config>
+   	
+
+</beans>
